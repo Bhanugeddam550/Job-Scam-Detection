@@ -66,7 +66,7 @@ job-scam-detector
 
 1. Clone the repository
 
-git clone https://github.com/Bhanugeddam550/Job Scam Detector.git
+git clone https://github.com/Bhanugeddam550/Job-Scam-Detector.git
 
 2. Navigate to the project folder
 
