@@ -42,8 +42,8 @@ h1, h2, h3 {
 }
 
 /* Paragraphs and text */
-p, label, div, span {
-    color: #1f2937;
+p, label, div, span, li {
+    color: #1f2937 !important;
 }
 
 /* Input labels */
@@ -83,7 +83,7 @@ input::placeholder, textarea::placeholder {
     border-radius: 12px;
     border: none;
     background: linear-gradient(90deg, #2563eb, #1d4ed8);
-    color: white;
+    color: white !important;
     font-weight: 600;
     font-size: 16px;
     height: 46px;
@@ -94,7 +94,7 @@ input::placeholder, textarea::placeholder {
 .stButton > button:hover {
     background: linear-gradient(90deg, #1d4ed8, #1e40af);
     transform: translateY(-1px);
-    color: white;
+    color: white !important;
 }
 
 /* Tabs */
@@ -105,7 +105,7 @@ input::placeholder, textarea::placeholder {
 .stTabs [data-baseweb="tab"] {
     background-color: #dbeafe;
     border-radius: 10px 10px 0 0;
-    color: #1e3a8a;
+    color: #1e3a8a !important;
     padding: 10px 18px;
     font-weight: 600;
 }
@@ -156,7 +156,7 @@ input::placeholder, textarea::placeholder {
 }
 
 .small-note {
-    color: #475569;
+    color: #475569 !important;
     font-size: 14px;
 }
 
@@ -170,7 +170,7 @@ section[data-testid="stSidebar"] * {
     color: #0f172a !important;
 }
 
-/* Metric cards tweak */
+/* Metric cards */
 [data-testid="metric-container"] {
     background: white;
     border: 1px solid #e5e7eb;
@@ -250,12 +250,15 @@ if "model" not in st.session_state:
 if "vectorizer" not in st.session_state:
     st.session_state.vectorizer = None
 
+if "example_job" not in st.session_state:
+    st.session_state.example_job = ""
+
 # ======================
 # SIMPLE NLP PREPROCESS
 # ======================
 def preprocess_text(text):
     text = text.lower()
-    text = re.sub(r"http\\S+|www\\S+|https\\S+", " ", text)
+    text = re.sub(r"http\S+|www\S+|https\S+", " ", text)
     text = re.sub(r"[^a-zA-Z0-9@+$ ]", " ", text)
     tokens = text.split()
 
@@ -309,15 +312,15 @@ def detect_missing_company_details(text):
 
 def detect_money_request(text):
     patterns = [
-        r'training fee',
-        r'registration fee',
-        r'processing fee',
-        r'pay.*fee',
-        r'security deposit',
-        r'equipment deposit',
-        r'background check fee',
-        r'send money',
-        r'payment required'
+        r"training fee",
+        r"registration fee",
+        r"processing fee",
+        r"pay.*fee",
+        r"security deposit",
+        r"equipment deposit",
+        r"background check fee",
+        r"send money",
+        r"payment required"
     ]
 
     matches = []
@@ -391,18 +394,18 @@ def detect_urgency(text):
 
     matches = []
     for keyword in urgency_keywords:
-        if re.search(rf"\\b{re.escape(keyword)}\\b", text, re.IGNORECASE):
+        if re.search(rf"\b{re.escape(keyword)}\b", text, re.IGNORECASE):
             matches.append(keyword)
 
     return matches
 
 def detect_salary_language(text):
     patterns = [
-        r"\\$\\d{3,5}\\s*(weekly|daily|monthly|per week|per day|per month)",
-        r"earn\\s+\\$\\d{3,}",
-        r"high\\s+salary\\s+no\\s+experience",
-        r"guaranteed\\s+(income|salary|payment)",
-        r"\\d{2,6}\\s*(per day|per week|per month)",
+        r"\$\d{3,5}\s*(weekly|daily|monthly|per week|per day|per month)",
+        r"earn\s+\$\d{3,}",
+        r"high\s+salary\s+no\s+experience",
+        r"guaranteed\s+(income|salary|payment)",
+        r"\d{2,6}\s*(per day|per week|per month)",
         r"easy money",
         r"earn from home"
     ]
@@ -412,7 +415,11 @@ def detect_salary_language(text):
         found = re.findall(pattern, text, re.IGNORECASE)
         if found:
             if isinstance(found, list):
-                matches.extend([str(x) for x in found])
+                for x in found:
+                    if isinstance(x, tuple):
+                        matches.append(" ".join([i for i in x if i]))
+                    else:
+                        matches.append(str(x))
             else:
                 matches.append(str(found))
 
@@ -422,14 +429,14 @@ def detect_contact_methods(text):
     patterns = [
         r"whatsapp",
         r"telegram",
-        r"\\+\\d{10,}",
-        r"cash\\s*app",
+        r"\+\d{10,}",
+        r"cash\s*app",
         r"paypal",
-        r"dm\\s*me",
-        r"direct\\s*message",
-        r"message\\s*us",
-        r"contact\\s*us\\s*on\\s*telegram",
-        r"contact\\s*us\\s*on\\s*whatsapp"
+        r"dm\s*me",
+        r"direct\s*message",
+        r"message\s*us",
+        r"contact\s*us\s*on\s*telegram",
+        r"contact\s*us\s*on\s*whatsapp"
     ]
 
     matches = []
@@ -449,7 +456,7 @@ def detect_grammar_issues(text):
     if re.search(r"!{2,}", text):
         issues.append("Too many exclamation marks")
 
-    if re.search(r"\\?{2,}", text):
+    if re.search(r"\?{2,}", text):
         issues.append("Too many question marks")
 
     professional_terms = [
@@ -460,9 +467,9 @@ def detect_grammar_issues(text):
     if not any(term in text.lower() for term in professional_terms):
         issues.append("Lacks professional job terminology")
 
-    line_count = len([line for line in text.split("\\n") if line.strip()])
+    line_count = len([line for line in text.split("\n") if line.strip()])
     if line_count > 3:
-        very_short_lines = [line for line in text.split("\\n") if 0 < len(line.split()) <= 3]
+        very_short_lines = [line for line in text.split("\n") if 0 < len(line.split()) <= 3]
         if len(very_short_lines) >= 3:
             issues.append("Poor sentence structure")
 
@@ -470,14 +477,14 @@ def detect_grammar_issues(text):
 
 def detect_too_good(text):
     patterns = [
-        r"no\\s+experience\\s+needed",
-        r"work\\s+from\\s+home",
-        r"easy\\s+money",
-        r"no\\s+interview",
-        r"guaranteed\\s+job",
-        r"part\\s*time\\s+high\\s+income",
-        r"earn\\s+without\\s+experience",
-        r"zero\\s+qualification"
+        r"no\s+experience\s+needed",
+        r"work\s+from\s+home",
+        r"easy\s+money",
+        r"no\s+interview",
+        r"guaranteed\s+job",
+        r"part\s*time\s+high\s+income",
+        r"earn\s+without\s+experience",
+        r"zero\s+qualification"
     ]
 
     matches = []
@@ -590,10 +597,21 @@ if not st.session_state.logged_in:
         st.subheader("Login to Your Account")
 
         st.markdown("**Email Address**")
-        login_email = st.text_input("Email Address", key="login_email", label_visibility="collapsed", placeholder="Enter your email address")
+        login_email = st.text_input(
+            "Email Address",
+            key="login_email",
+            label_visibility="collapsed",
+            placeholder="Enter your email address"
+        )
 
         st.markdown("**Password**")
-        login_password = st.text_input("Password", type="password", key="login_password", label_visibility="collapsed", placeholder="Enter your password")
+        login_password = st.text_input(
+            "Password",
+            type="password",
+            key="login_password",
+            label_visibility="collapsed",
+            placeholder="Enter your password"
+        )
 
         if st.button("Login", key="login_btn"):
             if not login_email or not login_password:
@@ -614,16 +632,38 @@ if not st.session_state.logged_in:
         st.subheader("Create Your Account")
 
         st.markdown("**Full Name**")
-        signup_name = st.text_input("Full Name", key="signup_name", label_visibility="collapsed", placeholder="Enter your name")
+        signup_name = st.text_input(
+            "Full Name",
+            key="signup_name",
+            label_visibility="collapsed",
+            placeholder="Enter your name"
+        )
 
         st.markdown("**Email Address**")
-        signup_email = st.text_input("Signup Email", key="signup_email", label_visibility="collapsed", placeholder="Enter your email address")
+        signup_email = st.text_input(
+            "Signup Email",
+            key="signup_email",
+            label_visibility="collapsed",
+            placeholder="Enter your email address"
+        )
 
         st.markdown("**Set Password**")
-        signup_password = st.text_input("Set Password", type="password", key="signup_password", label_visibility="collapsed", placeholder="Set up password")
+        signup_password = st.text_input(
+            "Set Password",
+            type="password",
+            key="signup_password",
+            label_visibility="collapsed",
+            placeholder="Set up password"
+        )
 
         st.markdown("**Confirm Password**")
-        signup_confirm_password = st.text_input("Confirm Password", type="password", key="signup_confirm_password", label_visibility="collapsed", placeholder="Confirm password")
+        signup_confirm_password = st.text_input(
+            "Confirm Password",
+            type="password",
+            key="signup_confirm_password",
+            label_visibility="collapsed",
+            placeholder="Confirm password"
+        )
 
         if st.button("Sign Up", key="signup_btn"):
             if not signup_name or not signup_email or not signup_password or not signup_confirm_password:
@@ -659,7 +699,7 @@ if st.sidebar.button("Logout"):
 st.markdown("""
 <div class="hero-box">
     <h1>🔍 AI Job Scam Detection System</h1>
-    <p>Paste a job post below and the system will analyze scam indicators using <b>Machine Learning</b>, <b>NLP-style text analysis</b>, and <b>rule-based detection</b>.</p>
+    <p>Paste a job post below and the system will analyze scam indicators</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -672,8 +712,11 @@ with tab1:
     col1, col2 = st.columns([2, 1])
 
     with col1:
+        default_text = st.session_state.example_job if st.session_state.example_job else ""
+
         job_text = st.text_area(
             "Paste Job Post Here",
+            value=default_text,
             height=320,
             placeholder="Paste the complete job description here..."
         )
@@ -684,22 +727,13 @@ with tab1:
             st.caption(f"Word count: {words} | Character count: {chars}")
 
         if st.button("Load Example Scam Job"):
-            example_text = """URGENT HIRING!!!
+            st.session_state.example_job = """URGENT HIRING!!!
 Work from home and earn $5000 weekly
 No experience needed
 WhatsApp us at +1234567890
 Immediate joining
 Training fee required to confirm your slot"""
-            st.session_state["example_job"] = example_text
             st.rerun()
-
-        if "example_job" in st.session_state:
-            st.text_area(
-                "Loaded Example Job Post",
-                value=st.session_state["example_job"],
-                height=180,
-                key="loaded_example"
-            )
 
     with col2:
         st.markdown("""
@@ -719,8 +753,8 @@ Training fee required to confirm your slot"""
     if st.button("Analyze Job Post", use_container_width=True):
         text_to_analyze = job_text.strip()
 
-        if not text_to_analyze and "example_job" in st.session_state:
-            text_to_analyze = st.session_state["example_job"]
+        if not text_to_analyze and st.session_state.example_job:
+            text_to_analyze = st.session_state.example_job
 
         if not text_to_analyze:
             st.warning("Paste a job post first.")
@@ -816,8 +850,7 @@ st.markdown("""
 <div class="about-box">
     <h2>About This Project</h2>
     <p>
-        This application analyzes job posts and identifies possible scam indicators using a combination of
-        <b>Machine Learning</b>, <b>NLP-style word pattern analysis</b>, and <b>rule-based detection</b>.
+        This application analyzes job posts and identifies possible scam indicators 
     </p>
     <p><b>Core Features:</b></p>
     <ul>
@@ -828,7 +861,6 @@ st.markdown("""
         <li>Money request / fee demand detection</li>
         <li>User login and signup with SQLite database</li>
     </ul>
-    <p><b>Tech Stack:</b> Python, Streamlit, Scikit-learn, Pandas, NumPy, SQLite</p>
     <p><b>Disclaimer:</b> This tool provides risk assessment only and may not always be 100% accurate. Always verify job opportunities through official company websites and trusted job portals.</p>
 </div>
 """, unsafe_allow_html=True)
