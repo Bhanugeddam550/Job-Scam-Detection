@@ -142,6 +142,17 @@ Users should **always verify job opportunities through official company websites
 
 **Bhanusri Geddam**
 
+👤 Authentication Feature
+
+This project also includes a basic user authentication system using SQLite, allowing users to:
+
+Create a new account
+
+Log in securely
+
+Access the scam detection system after authentication
+
+This improves the structure of the application and simulates real-world protected access to a web platform.
 ---
 
 ## ⭐ Future Improvements
