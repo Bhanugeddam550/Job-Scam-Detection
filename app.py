@@ -872,7 +872,7 @@ st.markdown("""
 <hr>
 <div style="text-align:center; padding: 8px 0 25px 0;">
     <p><b>AI Job Scam Detection System</b></p>
-    <p class="small-note">Built with Python • Machine Learning • NLP-style Analysis • SQLite • Streamlit</p>
+   
     <p class="small-note">Always verify job offers through official company websites and trusted recruitment platforms.</p>
 </div>
 """, unsafe_allow_html=True)
